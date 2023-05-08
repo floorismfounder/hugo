@@ -1,0 +1,62 @@
+datasource supabase {
+  provider = "postgresql"
+  url = env("SUPABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Vehicle {
+  id Int @id @default(autoincrement())
+  make String
+  model String
+  year Int
+  insuranceApplicationId Int?
+  insuranceApplication InsuranceApplication? @relation(fields: [insuranceApplicationId], references: [id])
+}
+
+model Address {
+  id Int @id @default(autoincrement())
+  street String
+  city String
+  state String
+  zipCode String
+  insuranceApplications InsuranceApplication[]
+}
+
+enum Relationship {
+  SPOUSE
+  SIBLING
+  PARENT
+  FRIEND
+  OTHER
+}
+
+model Person {
+  id Int @id @default(autoincrement())
+  firstName String
+  lastName String
+  dateOfBirth DateTime
+  relationship Relationship
+  personInsuranceApplications PersonInsuranceApplication[]
+  @@map(name: "people")
+}
+
+model PersonInsuranceApplication {
+  id Int @id @default(autoincrement())
+  personId Int
+  applicationId Int
+  person Person @relation(fields: [personId], references: [id])
+  application InsuranceApplication @relation(fields: [applicationId], references: [id])
+}
+
+model InsuranceApplication {
+  id Int @id @default(autoincrement())
+  dateCreated DateTime @default(now())
+  addressId Int
+  address Address @relation(fields: [addressId], references: [id])
+  vehicles Vehicle[]
+  personInsuranceApplications PersonInsuranceApplication[]
+  @@map(name: "insurance_applications")
+}

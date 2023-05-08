@@ -1,60 +1,133 @@
-import React from "react"
-import { GetStaticProps } from "next"
-import Layout from "../components/Layout"
-import Post, { PostProps } from "../components/Post"
+import { useState } from 'react';
+import {
+  InsuranceApplication,
+  Address,
+  Vehicle,
+  Person,
+  Relationship,
+} from '../pages/api/interfaces';
+import formConfig from './formConfig.json';
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
 
-export const getStaticProps: GetStaticProps = async () => {
-  const feed = [
-    {
-      id: "1",
-      title: "Prisma is the perfect ORM for Next.js",
-      content: "[Prisma](https://github.com/prisma/prisma) and Next.js go _great_ together!",
-      published: false,
-      author: {
-        name: "Nikolas Burk",
-        email: "burk@prisma.io",
-      },
-    },
-  ]
-  return { 
-    props: { feed }, 
-    revalidate: 10 
-  }
-}
 
-type Props = {
-  feed: PostProps[]
-}
+const App = () => {
+  const [applications, setApplications] = useState<InsuranceApplication[]>([]);
+  const [newApplication, setNewApplication] = useState<InsuranceApplication>({
+    id: undefined,
+    dateCreated: new Date(),
+    resumeUrl: '',
+    addressId: 0,
+    vehicles: { create: [] },
+    personInsuranceApplications: { create: [] },
+  });
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
-const Blog: React.FC<Props> = (props) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: {
+            street: formData['street'],
+            city: formData['city'],
+            state: formData['state'],
+            zipCode: formData['zipCode'],
+          },
+          vehicles: [
+            {
+              make: formData['make'],
+              model: formData['model'],
+              year: Number(formData['year']),
+            },
+          ],
+          personInsuranceApplications: [
+            {
+              person: {
+                firstName: formData['firstName'],
+                lastName: formData['lastName'],
+                dateOfBirth: new Date(formData['dateOfBirth']),
+                relationship: formData['relationship'] as Relationship,
+              },
+            },
+          ],
+        }),
+      });
+      if (res.ok) {
+        const { id, resumeUrl } = await res.json();
+        const newApplication: InsuranceApplication = {
+          id,
+          dateCreated: new Date(),
+          resumeUrl,
+          addressId: 0,
+          vehicles: { create: [] },
+          personInsuranceApplications: { create: [] },
+        };
+        setApplications([...applications, newApplication]);
+        setNewApplication({
+          id: undefined,
+          dateCreated: new Date(),
+          resumeUrl: '',
+          addressId: 0,
+          vehicles: { create: [] },
+          personInsuranceApplications: { create: [] },
+        });
+        setFormData({});
+      } else {
+        console.error(await res.text());
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
   return (
-    <Layout>
-      <div className="page">
-        <h1>Public Feed</h1>
-        <main>
-          {props.feed.map((post) => (
-            <div key={post.id} className="post">
-              <Post post={post} />
+    <div>
+      <Typography variant="h1">Applications</Typography>
+      <ul>
+        {applications.map((application) => (
+          <li key={application.id}>
+            {application.id} - {application.dateCreated.toDateString()} -{' '}
+            <a href={application.resumeUrl} target="_blank" rel="noreferrer">
+              Resume
+            </a>
+          </li>
+        ))}
+      </ul>
+      <Typography variant="h2">Add Application</Typography>
+      <form onSubmit={handleSubmit}>
+        {formConfig.map((field) => {
+          const { name, label, type } = field;
+          return (
+            <div key={name}>
+              <TextField
+                fullWidth
+                label={label}
+                name={name}
+                type={type}
+                value={formData[name] || ''}
+                onChange={handleChange}
+              />
             </div>
-          ))}
-        </main>
-      </div>
-      <style jsx>{`
-        .post {
-          background: white;
-          transition: box-shadow 0.1s ease-in;
-        }
+          );
+        })}
+        <br />
+        <Button type="submit" variant="contained" color="primary">
+          Submit
+        </Button>
+      </form>
+    </div>
+  );
+  
+};
 
-        .post:hover {
-          box-shadow: 1px 1px 3px #aaa;
-        }
-
-        .post + .post {
-          margin-top: 2rem;
-        }
-      `}</style>
-    </Layout>
-  )
-}
-
-export default Blog
+export default App

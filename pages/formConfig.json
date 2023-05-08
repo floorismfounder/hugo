@@ -1,0 +1,53 @@
+[
+    {
+      "label": "First Name",
+      "name": "firstName",
+      "type": "text"
+    },
+    {
+      "label": "Last Name",
+      "name": "lastName",
+      "type": "text"
+    },
+    {
+      "label": "Email",
+      "name": "email",
+      "type": "email"
+    },
+    {
+      "label": "Relationship",
+      "name": "relationship",
+      "type": "text"
+    },
+    {
+      "label": "Street",
+      "name": "street",
+      "type": "text"
+    },
+    {
+      "label": "City",
+      "name": "city",
+      "type": "text"
+    },
+    {
+      "label": "State",
+      "name": "state",
+      "type": "text"
+    },
+    {
+      "label": "Zip Code",
+      "name": "zipCode",
+      "type": "text"
+    },
+    {
+      "label": "Make",
+      "name": "make",
+      "type": "text"
+    },
+    {
+      "label": "Model",
+      "name": "model",
+      "type": "text"
+    }
+  ]
+  
